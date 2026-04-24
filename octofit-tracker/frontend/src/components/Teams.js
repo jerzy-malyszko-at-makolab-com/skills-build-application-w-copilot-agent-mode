@@ -2,18 +2,34 @@ import React, { useEffect, useState } from 'react';
 
 const Teams = () => {
   const [teams, setTeams] = useState([]);
+  const [error, setError] = useState('');
   const endpoint = `${process.env.REACT_APP_CODESPACE_URL}/api/teams/`;
 
   useEffect(() => {
     console.log('Fetching Teams from:', endpoint);
     fetch(endpoint)
-      .then(res => res.json())
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Nie udalo sie pobrac teams.');
+        }
+        return data;
+      })
       .then(data => {
-        const results = data.results || data;
+        const results = Array.isArray(data?.results)
+          ? data.results
+          : Array.isArray(data)
+            ? data
+            : [];
         setTeams(results);
+        setError('');
         console.log('Fetched Teams:', results);
       })
-      .catch(err => console.error('Error fetching teams:', err));
+      .catch(err => {
+        console.error('Error fetching teams:', err);
+        setTeams([]);
+        setError(err.message);
+      });
   }, [endpoint]);
 
   return (
@@ -22,6 +38,7 @@ const Teams = () => {
         <h2 className="h4 mb-0">Teams</h2>
       </div>
       <div className="card-body">
+        {error ? <div className="alert alert-danger">{error}</div> : null}
         {teams.length === 0 ? (
           <div className="alert alert-info">Brak danych do wyświetlenia.</div>
         ) : (

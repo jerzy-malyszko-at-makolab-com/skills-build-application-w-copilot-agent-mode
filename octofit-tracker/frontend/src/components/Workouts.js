@@ -2,18 +2,34 @@ import React, { useEffect, useState } from 'react';
 
 const Workouts = () => {
   const [workouts, setWorkouts] = useState([]);
+  const [error, setError] = useState('');
   const endpoint = `${process.env.REACT_APP_CODESPACE_URL}/api/workouts/`;
 
   useEffect(() => {
     console.log('Fetching Workouts from:', endpoint);
     fetch(endpoint)
-      .then(res => res.json())
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Nie udalo sie pobrac workouts.');
+        }
+        return data;
+      })
       .then(data => {
-        const results = data.results || data;
+        const results = Array.isArray(data?.results)
+          ? data.results
+          : Array.isArray(data)
+            ? data
+            : [];
         setWorkouts(results);
+        setError('');
         console.log('Fetched Workouts:', results);
       })
-      .catch(err => console.error('Error fetching workouts:', err));
+      .catch(err => {
+        console.error('Error fetching workouts:', err);
+        setWorkouts([]);
+        setError(err.message);
+      });
   }, [endpoint]);
 
   return (
@@ -22,6 +38,7 @@ const Workouts = () => {
         <h2 className="h4 mb-0">Workouts</h2>
       </div>
       <div className="card-body">
+        {error ? <div className="alert alert-danger">{error}</div> : null}
         {workouts.length === 0 ? (
           <div className="alert alert-info">Brak danych do wyświetlenia.</div>
         ) : (

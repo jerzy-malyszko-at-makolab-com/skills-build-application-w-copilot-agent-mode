@@ -2,18 +2,34 @@ import React, { useEffect, useState } from 'react';
 
 const Activities = () => {
   const [activities, setActivities] = useState([]);
+  const [error, setError] = useState('');
   const endpoint = `${process.env.REACT_APP_CODESPACE_URL}/api/activities/`;
 
   useEffect(() => {
     console.log('Fetching Activities from:', endpoint);
     fetch(endpoint)
-      .then(res => res.json())
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Nie udalo sie pobrac activities.');
+        }
+        return data;
+      })
       .then(data => {
-        const results = data.results || data;
+        const results = Array.isArray(data?.results)
+          ? data.results
+          : Array.isArray(data)
+            ? data
+            : [];
         setActivities(results);
+        setError('');
         console.log('Fetched Activities:', results);
       })
-      .catch(err => console.error('Error fetching activities:', err));
+      .catch(err => {
+        console.error('Error fetching activities:', err);
+        setActivities([]);
+        setError(err.message);
+      });
   }, [endpoint]);
 
   return (
@@ -22,6 +38,7 @@ const Activities = () => {
         <h2 className="h4 mb-0">Activities</h2>
       </div>
       <div className="card-body">
+        {error ? <div className="alert alert-danger">{error}</div> : null}
         {activities.length === 0 ? (
           <div className="alert alert-info">Brak danych do wyświetlenia.</div>
         ) : (

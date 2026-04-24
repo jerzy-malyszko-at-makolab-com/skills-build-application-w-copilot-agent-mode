@@ -2,18 +2,34 @@ import React, { useEffect, useState } from 'react';
 
 const Leaderboard = () => {
   const [leaders, setLeaders] = useState([]);
+  const [error, setError] = useState('');
   const endpoint = `${process.env.REACT_APP_CODESPACE_URL}/api/leaderboard/`;
 
   useEffect(() => {
     console.log('Fetching Leaderboard from:', endpoint);
     fetch(endpoint)
-      .then(res => res.json())
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Nie udalo sie pobrac leaderboard.');
+        }
+        return data;
+      })
       .then(data => {
-        const results = data.results || data;
+        const results = Array.isArray(data?.results)
+          ? data.results
+          : Array.isArray(data)
+            ? data
+            : [];
         setLeaders(results);
+        setError('');
         console.log('Fetched Leaderboard:', results);
       })
-      .catch(err => console.error('Error fetching leaderboard:', err));
+      .catch(err => {
+        console.error('Error fetching leaderboard:', err);
+        setLeaders([]);
+        setError(err.message);
+      });
   }, [endpoint]);
 
   return (
@@ -22,6 +38,7 @@ const Leaderboard = () => {
         <h2 className="h4 mb-0">Leaderboard</h2>
       </div>
       <div className="card-body">
+        {error ? <div className="alert alert-danger">{error}</div> : null}
         {leaders.length === 0 ? (
           <div className="alert alert-info">Brak danych do wyświetlenia.</div>
         ) : (

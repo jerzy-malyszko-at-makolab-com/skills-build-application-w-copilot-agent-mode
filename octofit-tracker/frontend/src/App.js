@@ -1,6 +1,13 @@
 
 
-import logo from '../public/octofitapp-small.png';
+import React from 'react';
+import { BrowserRouter as Router, NavLink, Route, Routes } from 'react-router-dom';
+import Activities from './components/Activities';
+import Leaderboard from './components/Leaderboard';
+import Teams from './components/Teams';
+import Users from './components/Users';
+import Workouts from './components/Workouts';
+import './App.css';
 
 function App() {
   return (
@@ -8,7 +15,7 @@ function App() {
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div className="container-fluid">
           <NavLink className="navbar-brand d-flex align-items-center" to="/">
-            <img src={logo} alt="OctoFit Logo" style={{height:32, marginRight:12}} />
+            <img src="/octofitapp-small.png" alt="OctoFit Logo" style={{height:32, marginRight:12}} />
             OctoFit Tracker
           </NavLink>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

@@ -2,18 +2,34 @@ import React, { useEffect, useState } from 'react';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
+  const [error, setError] = useState('');
   const endpoint = `${process.env.REACT_APP_CODESPACE_URL}/api/users/`;
 
   useEffect(() => {
     console.log('Fetching Users from:', endpoint);
     fetch(endpoint)
-      .then(res => res.json())
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Nie udalo sie pobrac users.');
+        }
+        return data;
+      })
       .then(data => {
-        const results = data.results || data;
+        const results = Array.isArray(data?.results)
+          ? data.results
+          : Array.isArray(data)
+            ? data
+            : [];
         setUsers(results);
+        setError('');
         console.log('Fetched Users:', results);
       })
-      .catch(err => console.error('Error fetching users:', err));
+      .catch(err => {
+        console.error('Error fetching users:', err);
+        setUsers([]);
+        setError(err.message);
+      });
   }, [endpoint]);
 
   return (
@@ -22,6 +38,7 @@ const Users = () => {
         <h2 className="h4 mb-0">Users</h2>
       </div>
       <div className="card-body">
+        {error ? <div className="alert alert-danger">{error}</div> : null}
         {users.length === 0 ? (
           <div className="alert alert-info">Brak danych do wyświetlenia.</div>
         ) : (
